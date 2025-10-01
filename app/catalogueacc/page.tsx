@@ -54,7 +54,7 @@ export default function Page() {
 
       <div className="min-h-screen bg-teal-100 p-6">
         {/* Header */}
-        <div className="flex items-center gap-2 text-sm text-2xl mb-7 mt-20">
+        <div className="flex items-center gap-2 text-2xl mb-7 mt-20">
           <Home size={20} />
           <span>Collections</span>
         </div>
