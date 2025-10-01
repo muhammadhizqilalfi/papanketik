@@ -14,7 +14,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "papanketik.",
-  description: "a Custom Keyboard site to Express your style",
+  description: "a Custom Keyboard Marketplace to Express your style",
 };
 
 export default function RootLayout({
