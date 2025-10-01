@@ -21,14 +21,11 @@ export default function ProductDetail({
   product,
 }: ProductDetailProps) {
   if (!isOpen || !product) return null;
-
-  // Simpan ke localStorage saat modal terbuka
   useEffect(() => {
     if (product) {
       const stored = localStorage.getItem("recentlyViewed");
       const recent = stored ? JSON.parse(stored) : [];
 
-      // Cek duplikat
       const exists = recent.find((p: any) => p.id === product.id);
       if (!exists) {
         const updated = [product, ...recent].slice(0, 6); // max 6
