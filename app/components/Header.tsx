@@ -9,8 +9,9 @@ import {
 } from "lucide-react";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
+import Link from "next/link";
 
-export default function Header() {
+export default function Header({ onSearch }: { onSearch?: (q: string) => void }) {
   const messages = [
     "Welcome to papanketik.",
     "Discover custom keyboards.",
@@ -20,6 +21,7 @@ export default function Header() {
   const [openMenu, setOpenMenu] = useState<string | null>(null);
   const [subMenu, setSubMenu] = useState<string | null>(null);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Semua menu dengan link
   const menus: Record<string, { label: string; href: string }[]> = {
@@ -193,10 +195,13 @@ export default function Header() {
             className="cursor-pointer hover:scale-110 transition-transform duration-300"
             onClick={() => setIsSearchOpen((prev) => !prev)}
           />
-          <User
-            color="black"
-            className="cursor-pointer hover:scale-110 transition-transform duration-300"
-          />
+          <Link href="/Authentication/Login/">
+            <User
+              color="black"
+              className="cursor-pointer hover:scale-110 transition-transform duration-300"
+            />
+          </Link>
+
           <ShoppingCart
             color="black"
             className="cursor-pointer hover:scale-110 transition-transform duration-300"
@@ -234,6 +239,11 @@ export default function Header() {
               <input
                 type="text"
                 placeholder="Search for keyboards, accessories..."
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  onSearch?.(e.target.value); // kirim ke parent
+                }}
                 className="w-full p-2 text-lg rounded-2xl outline-none"
               />
             </div>

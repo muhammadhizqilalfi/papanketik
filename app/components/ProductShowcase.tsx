@@ -1,6 +1,7 @@
 "use client";
 
 import Image from "next/image";
+import Link from "next/link"; // import Link dari next
 import { ArrowRight } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion"; // import framer-motion
@@ -46,9 +47,10 @@ export default function ProductShowcase() {
     setHoverXY((prev) => prev.map((v, i) => (i === index ? { x: 0, y: 0 } : v)));
   };
 
+  // tambahkan link untuk tiap card
   const bottomCards = [
-    { title: "Shop Keyboards", image: "/images/key.webp" },
-    { title: "Shop Accessories", image: "/images/acc.webp" },
+    { title: "Shop Keyboards", image: "/images/key.webp", link: "/cataloguekey/" },
+    { title: "Shop Accessories", image: "/images/acc.webp", link: "/catalogueacc/" },
   ];
 
   // Variants framer-motion untuk scroll reveal
@@ -156,9 +158,11 @@ export default function ProductShowcase() {
 
             <div className="relative z-10 flex flex-col items-center">
               <p className="text-white mb-4 font-bold text-3xl">{card.title}</p>
-              <button className="flex items-center justify-center border border-white text-white rounded-full px-10 py-3 hover:bg-white hover:text-gray-800 transition">
-                <ArrowRight size={16} />
-              </button>
+              <Link href={card.link}>
+                <button className="flex items-center justify-center border border-white text-white rounded-full px-10 py-3 hover:bg-white hover:text-gray-800 transition">
+                  <ArrowRight size={16} />
+                </button>
+              </Link>
             </div>
           </motion.div>
         ))}
