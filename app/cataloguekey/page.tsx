@@ -1,17 +1,20 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Home } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import ModalProductDetail from "../components/ProductDetail";
 
 export default function Page() {
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
 
-  // data produk dengan image + harga
   const products = [
     { id: 1, name: "KBDFans Tofu60 Rev2.0", price: "Rp 350.000", image: "/images/product1.webp" },
     { id: 2, name: "QK MKII", price: "Rp 420.000", image: "/images/product2.webp" },
@@ -24,15 +27,12 @@ export default function Page() {
     { id: 9, name: "Onibi", price: "Rp 280.000", image: "/images/product9.jpg" },
   ];
 
-  // fungsi parsing harga
   const parsePrice = (price: string) => parseInt(price.replace(/[^\d]/g, ""), 10);
 
-  // filter produk berdasarkan search
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
-  // sorting produk
   const sortedProducts = [...filteredProducts].sort((a, b) => {
     if (sortOption === "name-asc") return a.name.localeCompare(b.name);
     if (sortOption === "name-desc") return b.name.localeCompare(a.name);
@@ -41,25 +41,34 @@ export default function Page() {
     return 0;
   });
 
-  // pagination
   const itemsPerPage = 8;
   const totalPages = Math.ceil(sortedProducts.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
 
+  // Ambil Recently Viewed dari localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("recentlyViewed");
+    if (stored) {
+      setRecentlyViewed(JSON.parse(stored));
+    }
+  }, [isModalOpen]); // refresh setiap modal ditutup
+
+  const clearRecentlyViewed = () => {
+    localStorage.removeItem("recentlyViewed");
+    setRecentlyViewed([]);
+  };
+
   return (
     <div>
-      {/* Pass setSearchQuery ke Header */}
       <Header onSearch={setSearchQuery} />
 
       <div className="min-h-screen bg-teal-100 p-6">
-        {/* Header */}
-        <div className="flex items-center gap-2 text-sm text-2xl mb-7 mt-20">
+        <div className="flex items-center gap-2 text-2xl mb-7 mt-20">
           <Home size={20} />
           <span>Collections</span>
         </div>
 
-        {/* Title + Sorting */}
         <div className="flex justify-between items-center mb-10">
           <h1 className="text-5xl font-bold">Catalogue</h1>
           <select
@@ -80,7 +89,11 @@ export default function Page() {
           {paginatedProducts.map((product) => (
             <div
               key={product.id}
-              className="bg-white rounded-xl shadow hover:shadow-lg overflow-hidden transition"
+              className="bg-white rounded-xl shadow hover:shadow-lg overflow-hidden transition cursor-pointer"
+              onClick={() => {
+                setSelectedProduct(product);
+                setIsModalOpen(true);
+              }}
             >
               <div className="relative w-full h-80">
                 <Image
@@ -90,7 +103,6 @@ export default function Page() {
                   className="object-cover"
                 />
               </div>
-
               <div className="p-6 border-t bg-white flex justify-between items-center">
                 <h2 className="text-lg font-semibold">{product.name}</h2>
                 <p className="text-teal-700 font-bold">{product.price}</p>
@@ -116,7 +128,55 @@ export default function Page() {
             </button>
           ))}
         </div>
+
+        {/* Recently Viewed */}
+        {recentlyViewed.length > 0 && (
+          <div className="mt-16">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-bold">Recently Viewed</h2>
+              <button
+                onClick={clearRecentlyViewed}
+                className="text-sm text-white px-4 py-2 bg-red-400 rounded-md hover:bg-red-500 transition"
+              >
+                Clear
+              </button>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
+              {recentlyViewed.map((product) => (
+                <div
+                  key={product.id}
+                  className="bg-white rounded-xl shadow overflow-hidden cursor-pointer"
+                  onClick={() => {
+                    setSelectedProduct(product);
+                    setIsModalOpen(true);
+                  }}
+                >
+                  <div className="relative w-full h-48">
+                    <Image
+                      src={product.image}
+                      alt={product.name}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
+                  <div className="p-4 flex justify-between items-center">
+                    <h3 className="text-sm font-semibold">{product.name}</h3>
+                    <p className="text-teal-600 font-bold">{product.price}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Modal Product */}
+      <ModalProductDetail
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        product={selectedProduct}
+      />
+
       <Footer />
     </div>
   );
