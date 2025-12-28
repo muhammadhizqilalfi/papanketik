@@ -12,8 +12,8 @@ export default function CreateAccountPage() {
   const slides = [
     { type: "text", content: "Your keyboard journey starts here." },
     { type: "text", content: "Craft. Customize. Express yourself." },
-    { type: "icon" },
     { type: "text", content: "Join the custom keyboard culture." },
+    { type: "icon" },
   ];
 
   useEffect(() => {

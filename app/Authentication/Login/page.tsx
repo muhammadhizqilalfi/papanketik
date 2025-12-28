@@ -14,8 +14,8 @@ export default function LoginPage() {
   const slides = [
     { type: "text", content: "Build the keyboard that feels like you." },
     { type: "text", content: "Every switch, every keycap, your signature." },
-    { type: "icon" },
     { type: "text", content: "Type your style. Hear the difference." },
+    { type: "icon" },
   ];
 
   useEffect(() => {
