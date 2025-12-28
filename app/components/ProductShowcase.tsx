@@ -73,7 +73,7 @@ export default function ProductShowcase() {
           style={{ transform: `translateX(-${current * 100}%)` }}
         >
           {productImages.map((product) => (
-            <div key={product.src} className="flex-shrink-0 w-full relative group">
+            <div key={product.src} className="shrink-0 w-full relative group">
               <Image
                 src={product.src}
                 alt={product.name}
@@ -81,7 +81,7 @@ export default function ProductShowcase() {
                 priority
                 className="object-cover transition-transform duration-500 group-hover:scale-110"
               />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
+              <div className="absolute inset-0 bg-linear-to-t from-black/60 via-black/20 to-transparent" />
             </div>
           ))}
         </div>

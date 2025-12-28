@@ -1,25 +1,27 @@
 "use client";
 import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
+import { useRef } from "react";
 
 export default function Footer() {
-  const { scrollYProgress } = useScroll();
+  const footerRef = useRef(null);
 
-  // Gerakkan footer dari bawah ke atas seperti lembaran
-  const rawY = useTransform(scrollYProgress, [0.9, 1], ["100%", "0%"]);
-  const y = useSpring(rawY, { stiffness: 60, damping: 20 });
+  // Scroll progress KHUSUS footer
+  const { scrollYProgress } = useScroll({
+    target: footerRef,
+    offset: ["start end", "end end"],
+  });
+
+  // Dari bawah → posisi normal
+  const yRaw = useTransform(scrollYProgress, [0, 1], [120, 0]);
+  const y = useSpring(yRaw, { stiffness: 80, damping: 20 });
 
   return (
-    <div className="relative">
-      {/* Spacer biar ada area untuk reveal */}
-      <div className="h-[50vh]" />
-
-      {/* Footer yang akan slide masuk */}
-      <motion.footer
+    <footer ref={footerRef} className="relative">
+      <motion.div
         style={{ y }}
-        className="absolute bottom-0 left-0 w-full bg-black text-white flex flex-col items-center justify-center py-20 shadow-2xl"
+        className="bg-black text-white flex flex-col items-center justify-center py-24 shadow-2xl"
       >
-        {/* Logo */}
         <div className="mb-6">
           <Image
             src="/images/logo.png"
@@ -30,9 +32,8 @@ export default function Footer() {
           />
         </div>
 
-        {/* Copyright */}
         <p className="text-sm tracking-wide">2025 © papanketik.</p>
-      </motion.footer>
-    </div>
+      </motion.div>
+    </footer>
   );
 }
