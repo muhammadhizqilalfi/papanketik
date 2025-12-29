@@ -4,11 +4,14 @@ import { ChevronDown, Search, User, ShoppingCart, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
+import { supabase } from "@/lib/Client";
 
 import AuthPanel from "./AuthPanel";
 import SearchPanel from "./SearchPanel";
 import ShopPanel from "./ShopPanel";
 import CartPanel from "./CartPanel";
+
+type AuthState = "login" | "signup" | "reset" | null;
 
 export default function Header({
   onSearch,
@@ -21,6 +24,9 @@ export default function Header({
     "Type your style, your way.",
   ];
 
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+
   const [index, setIndex] = useState(0);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [isShopOpen, setIsShopOpen] = useState(false);
@@ -28,14 +34,12 @@ export default function Header({
   const [isAuthOpen, setIsAuthOpen] = useState<AuthState>(null);
 
   const [searchQuery, setSearchQuery] = useState("");
-
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  const isAnyPanelOpen = isSearchOpen || isShopOpen || isCartOpen || isAuthOpen;
+  const isAnyPanelOpen =
+    isSearchOpen || isShopOpen || isCartOpen || isAuthOpen;
 
-  type AuthState = "login" | "signup" | "reset" | null;
-
-
+  /* ===== MESSAGE ROTATION ===== */
   useEffect(() => {
     const interval = setInterval(
       () => setIndex((prev) => (prev + 1) % messages.length),
@@ -44,6 +48,7 @@ export default function Header({
     return () => clearInterval(interval);
   }, []);
 
+  /* ===== FOLLOW CURSOR ===== */
   useEffect(() => {
     if (!isAnyPanelOpen) return;
 
@@ -54,6 +59,45 @@ export default function Header({
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [isAnyPanelOpen]);
+
+  /* ===== AUTH + PROFILE ===== */
+  useEffect(() => {
+    const loadUser = async () => {
+      const { data } = await supabase.auth.getUser();
+      setUser(data.user);
+
+      if (data.user) {
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("*")
+          .single();
+
+        setProfile(profileData);
+      } else {
+        setProfile(null);
+      }
+    };
+
+    loadUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(() => {
+      loadUser();
+    });
+
+    return () => {
+      listener.subscription.unsubscribe();
+    };
+  }, []);
+
+  /* ===== INITIALS ===== */
+  const getInitials = (name?: string) => {
+    if (!name) return "";
+    return name
+      .split(" ")
+      .map((n) => n[0])
+      .join("")
+      .toUpperCase();
+  };
 
   const closeAll = () => {
     setIsSearchOpen(false);
@@ -98,10 +142,7 @@ export default function Header({
     <header className="w-full relative z-50">
       {/* TOP HEADER */}
       <div className="bg-teal-700 text-white text-center text-sm h-20 overflow-hidden relative">
-        <div
-          key={index}
-          className="animate-bounce absolute w-full top-3 left-0"
-        >
+        <div key={index} className="animate-bounce absolute w-full top-3 left-0">
           {messages[index]}
         </div>
       </div>
@@ -112,10 +153,7 @@ export default function Header({
 
         <ul className="flex items-center gap-6 font-medium">
           <li>
-            <Link
-              href="/"
-              className="relative px-6 py-2 hover:text-white group"
-            >
+            <Link href="/" className="relative px-6 py-2 hover:text-white group">
               <span className="absolute inset-0 bg-black rounded-full -z-10 opacity-0 group-hover:opacity-100 transition" />
               Home
             </Link>
@@ -130,10 +168,7 @@ export default function Header({
             </button>
           </li>
           <li>
-            <Link
-              href="/support"
-              className="relative px-6 py-2 hover:text-white group"
-            >
+            <Link href="/support" className="relative px-6 py-2 hover:text-white group">
               <span className="absolute inset-0 bg-black rounded-full -z-10 opacity-0 group-hover:opacity-100 transition" />
               Support
             </Link>
@@ -141,24 +176,21 @@ export default function Header({
         </ul>
 
         <div className="flex items-center text-black">
-          <button
-            onClick={() => closeAllExcept("search")}
-            className="p-3 rounded-full hover:bg-black hover:text-white transition"
-          >
+          <button onClick={() => closeAllExcept("search")} className="p-3 rounded-full hover:bg-black hover:text-white transition">
             <Search size={20} />
           </button>
 
-          <button
-            onClick={() => closeAllExcept("auth")}
-            className="p-3 rounded-full hover:bg-black hover:text-white transition"
-          >
-            <User size={20} />
+          <button onClick={() => closeAllExcept("auth")} className="p-2 rounded-full hover:bg-black hover:text-white transition">
+            {profile ? (
+              <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold">
+                {getInitials(profile.full_name)}
+              </div>
+            ) : (
+              <User size={20} />
+            )}
           </button>
 
-          <button
-            onClick={() => closeAllExcept("cart")}
-            className="p-3 rounded-full hover:bg-black hover:text-white transition"
-          >
+          <button onClick={() => closeAllExcept("cart")} className="p-3 rounded-full hover:bg-black hover:text-white transition">
             <ShoppingCart size={20} />
           </button>
         </div>
@@ -166,11 +198,9 @@ export default function Header({
 
       <div className="h-16" />
 
-      {/* BLUR + CLOSE FOLLOW CURSOR */}
       <AnimatePresence>
         {isAnyPanelOpen && (
           <>
-            {/* BLUR */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -179,18 +209,14 @@ export default function Header({
               className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
             />
 
-            {/* CLOSE BUTTON */}
             <motion.button
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
               transition={{ type: "spring", stiffness: 300, damping: 20 }}
-              style={{
-                left: mousePos.x - 20,
-                top: mousePos.y - 20,
-              }}
+              style={{ left: mousePos.x - 20, top: mousePos.y - 20 }}
               onClick={closeAll}
-              className="fixed z-50 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-xl hover:scale-110 active:scale-95"
+              className="fixed z-50 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-xl"
             >
               <X size={18} />
             </motion.button>
@@ -198,13 +224,7 @@ export default function Header({
         )}
       </AnimatePresence>
 
-      {/* PANELS */}
-      <SearchPanel
-        isOpen={isSearchOpen}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        onSearch={onSearch}
-      />
+      <SearchPanel isOpen={isSearchOpen} searchQuery={searchQuery} setSearchQuery={setSearchQuery} onSearch={onSearch} />
       <ShopPanel isOpen={isShopOpen} menus={menus} />
       <CartPanel isOpen={isCartOpen} />
       <AuthPanel isOpen={isAuthOpen} setIsOpen={setIsAuthOpen} />
