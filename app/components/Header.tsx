@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ChevronDown, Search, User, ShoppingCart, X } from "lucide-react";
+import { ChevronDown, Search, User, ShoppingCart, X, Layout } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
@@ -76,6 +76,29 @@ export default function Header({
     setIsShopOpen(panel === "shop" ? !isShopOpen : false);
     setIsCartOpen(panel === "cart" ? !isCartOpen : false);
     setIsAuthOpen(panel === "auth" ? (isAuthOpen ? null : "login") : null);
+  };
+
+  const menus = {
+    "Custom Keyboards": [
+      { label: "Mechanical Keyboards", href: "/shop/mechanical-keyboards" },
+      { label: "Ergonomic Keyboards", href: "/shop/ergonomic-keyboards" },
+      { label: "Wireless Keyboards", href: "/shop/wireless-keyboards" },
+    ],
+    Layout: [
+      { label: "Full Size", href: "/shop/full-size" },
+      { label: "Tenkeyless", href: "/shop/tenkeyless" },
+      { label: "Compact", href: "/shop/compact" },
+    ],
+    Accessories: [
+      { label: "Keycaps", href: "/shop/keycaps" },
+      { label: "Switches", href: "/shop/switches" },
+      { label: "Wrist Rests", href: "/shop/wrist-rests" },
+    ],
+    Shop: [
+      { label: "All Products", href: "/shop" },
+      { label: "New Arrivals", href: "/shop/new-arrivals" },
+      { label: "Best Sellers", href: "/shop/best-sellers" },
+    ],
   };
 
   return (
@@ -193,7 +216,7 @@ export default function Header({
         setSearchQuery={setSearchQuery}
         onSearch={onSearch}
       />
-      <ShopPanel isOpen={isShopOpen} menus={{}} />
+      <ShopPanel isOpen={isShopOpen} menus={menus} />
       <CartPanel isOpen={isCartOpen} />
       <AuthPanel
         isOpen={isAuthOpen}
