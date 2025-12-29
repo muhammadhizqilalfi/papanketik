@@ -22,7 +22,6 @@ const word = {
   visible: { opacity: 1, y: 0, x: 22 },
 };
 
-
 export default function ShopPanel({ isOpen, menus }: ShopPanelProps) {
   return (
     <AnimatePresence>
