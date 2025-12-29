@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { X, ChevronLeft, ChevronRight } from "lucide-react";
 
 interface ProductDetailProps {
   isOpen: boolean;
@@ -12,6 +12,8 @@ interface ProductDetailProps {
     name: string;
     price: string;
     image: string;
+    thumbnails?: string[]; // 4 thumbnails
+    description?: string;
   } | null;
 }
 
@@ -20,63 +22,100 @@ export default function ProductDetail({
   onClose,
   product,
 }: ProductDetailProps) {
-  if (!isOpen || !product) return null;
+  const [activeImage, setActiveImage] = useState<string>("");
+
   useEffect(() => {
-    if (product) {
+    if (isOpen && product) {
+      setActiveImage(product.image);
       const stored = localStorage.getItem("recentlyViewed");
       const recent = stored ? JSON.parse(stored) : [];
 
       const exists = recent.find((p: any) => p.id === product.id);
       if (!exists) {
-        const updated = [product, ...recent].slice(0, 6); // max 6
+        const updated = [product, ...recent].slice(0, 6);
         localStorage.setItem("recentlyViewed", JSON.stringify(updated));
       }
     }
-  }, [product]);
+  }, [isOpen, product]);
+
+  if (!isOpen || !product) return null;
+
+  const thumbnails = product.thumbnails || [];
+
+  const handlePrev = () => {
+    const currentIndex = thumbnails.indexOf(activeImage);
+    if (currentIndex > 0) setActiveImage(thumbnails[currentIndex - 1]);
+  };
+
+  const handleNext = () => {
+    const currentIndex = thumbnails.indexOf(activeImage);
+    if (currentIndex < thumbnails.length - 1) setActiveImage(thumbnails[currentIndex + 1]);
+  };
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm z-50">
-      <div className="bg-white rounded-2xl shadow-2xl w-[90%] max-w-3xl relative overflow-hidden animate-fadeIn">
+      <div className="bg-teal-50 rounded-2xl shadow-2xl w-[90%] max-w-4xl relative overflow-hidden p-6 animate-fadeIn">
+        {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-2 left-2 w-6 h-6 flex items-center justify-center bg-red-500 rounded-full hover:bg-red-600 transition"
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center bg-red-500 rounded-full hover:bg-red-600 transition"
         >
-          <X size={14} className="text-black" />
+          <X size={18} className="text-white" />
         </button>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 p-8">
-          {/* Gambar Produk */}
-          <div className="relative w-full h-72 md:h-96 rounded-xl overflow-hidden shadow">
-            <Image
-              src={product.image}
-              alt={product.name}
-              fill
-              className="object-cover"
-            />
+        <div className="flex flex-col md:flex-row gap-6">
+          {/* Left Column: Main Image + Thumbnails */}
+          <div className="flex flex-col gap-4 flex-1">
+            <div className="relative w-full h-72 md:h-96 rounded-xl overflow-hidden shadow">
+              <Image src={activeImage} alt={product.name} fill className="object-cover" />
+              {/* Navigation Buttons */}
+              {thumbnails.length > 1 && (
+                <>
+                  <button
+                    onClick={handlePrev}
+                    className="absolute top-1/2 left-2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition"
+                  >
+                    <ChevronLeft size={20} />
+                  </button>
+                  <button
+                    onClick={handleNext}
+                    className="absolute top-1/2 right-2 -translate-y-1/2 bg-black/50 text-white p-2 rounded-full hover:bg-black/70 transition"
+                  >
+                    <ChevronRight size={20} />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {/* Thumbnails */}
+            <div className="grid grid-cols-4 gap-2">
+              {thumbnails.map((thumb, idx) => (
+                <div
+                  key={idx}
+                  onClick={() => setActiveImage(thumb)}
+                  className={`w-full h-16 rounded-lg overflow-hidden shadow cursor-pointer border-2 ${
+                    activeImage === thumb ? "border-teal-600" : "border-transparent"
+                  }`}
+                >
+                  <Image src={thumb} alt={`thumb-${idx}`} fill className="object-cover" />
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Detail Produk */}
-          <div className="flex flex-col justify-between">
+          {/* Right Column: Product Details */}
+          <div className="flex flex-col justify-between flex-1">
             <div>
-              <h2 className="text-3xl font-bold mb-4">{product.name}</h2>
-              <p className="text-2xl text-teal-700 font-semibold mb-6">
-                {product.price}
-              </p>
-              <p className="text-gray-600 mb-6">
-                Keyboard custom dengan layout 60% yang ringkas dan portabel,
-                cocok untuk pengguna yang menginginkan efisiensi ruang tanpa
-                mengorbankan fungsionalitas.
+              <h2 className="font-bold text-xl md:text-2xl mb-2">{product.name}</h2>
+              <p className="text-lg md:text-xl font-semibold text-teal-700 mb-4">{product.price}</p>
+              <p className="text-gray-600 text-sm md:text-base">
+                {product.description || "Detail Product"}
               </p>
             </div>
 
-            <div className="flex gap-4 mt-4">
-              <button className="flex-1 px-5 py-3 bg-teal-600 text-white font-medium rounded-lg hover:bg-teal-700 transition">
-                Add to Cart
-              </button>
-              <button className="flex-1 px-5 py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition">
-                Buy Now
-              </button>
-            </div>
+            <button className="mt-6 w-full py-3 bg-black text-white font-medium rounded-lg hover:bg-gray-800 transition">
+              Add to Cart
+            </button>
           </div>
         </div>
       </div>
