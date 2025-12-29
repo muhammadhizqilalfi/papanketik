@@ -1,39 +1,28 @@
 "use client";
-import { motion, useScroll, useTransform, useSpring } from "framer-motion";
 import Image from "next/image";
-import { useRef } from "react";
 
 export default function Footer() {
-  const footerRef = useRef(null);
-
-  // Scroll progress KHUSUS footer
-  const { scrollYProgress } = useScroll({
-    target: footerRef,
-    offset: ["start end", "end end"],
-  });
-
-  // Dari bawah → posisi normal
-  const yRaw = useTransform(scrollYProgress, [0, 1], [120, 0]);
-  const y = useSpring(yRaw, { stiffness: 80, damping: 20 });
-
   return (
-    <footer ref={footerRef} className="relative">
-      <motion.div
-        style={{ y }}
-        className="bg-black text-white flex flex-col items-center justify-center py-24 shadow-2xl"
-      >
-        <div className="mb-6">
-          <Image
-            src="/images/logo.png"
-            alt="Papanketik Logo"
-            width={200}
-            height={70}
-            priority
-          />
+    <footer className="sticky bottom-0 w-full h-80 bg-black text-white shadow-xl">
+      <div className="max-w-7xl mx-auto px-6 py-8 flex flex-col items-center gap-4">
+        <Image
+          src="/images/logo.png"
+          alt="Papanketik Logo"
+          width={180}
+          height={60}
+          priority
+        />
+
+        <div className="flex gap-6 text-sm">
+          <a href="#" className="hover:underline">About</a>
+          <a href="#" className="hover:underline">Support</a>
+          <a href="#" className="hover:underline">Privacy</a>
         </div>
 
-        <p className="text-sm tracking-wide">2025 © papanketik.</p>
-      </motion.div>
+        <p className="text-xs text-gray-300 text-center">
+          © 2025 Papanketik. All rights reserved.
+        </p>
+      </div>
     </footer>
   );
 }

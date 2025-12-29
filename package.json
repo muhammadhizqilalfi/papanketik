@@ -8,8 +8,11 @@
     "start": "next start -p 3000"
   },
   "dependencies": {
+    "bcryptjs": "^3.0.3",
     "framer-motion": "^12.23.22",
+    "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.544.0",
+    "mongoose": "^9.0.2",
     "next": "15.5.4",
     "react": "19.1.0",
     "react-dom": "19.1.0",

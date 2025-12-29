@@ -63,7 +63,7 @@ export default function Page() {
     <div>
       <Header onSearch={setSearchQuery} />
 
-      <div className="min-h-screen bg-teal-100 p-6">
+      <div className="min-h-screen bg-teal-100 p-6 z-10 relative rounded-b-4xl">
         <div className="flex items-center gap-2 text-2xl mb-7 mt-20">
           <Home size={20} />
           <span>Collections</span>
@@ -74,7 +74,7 @@ export default function Page() {
           <select
             value={sortOption}
             onChange={(e) => setSortOption(e.target.value)}
-            className="p-2 rounded-lg outline-none border-none bg-teal-50"
+            className="p-2 rounded-full outline-none border-none bg-teal-50"
           >
             <option value="default">Default</option>
             <option value="name-asc">Name (A-Z)</option>
@@ -133,14 +133,15 @@ export default function Page() {
         {recentlyViewed.length > 0 && (
           <div className="mt-16">
             <div className="flex justify-between items-center mb-4">
-              <h2 className="text-2xl font-bold">Recently Viewed</h2>
+              <h2 className="text-4xl font-bold">Recently Viewed</h2>
               <button
                 onClick={clearRecentlyViewed}
-                className="text-sm text-white px-4 py-2 bg-red-400 rounded-md hover:bg-red-500 transition"
+                className="text-sm text-white px-4 py-2 bg-red-400 rounded-full hover:bg-red-500 transition"
               >
                 Clear
               </button>
             </div>
+            <div className="mb-8"/>
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {recentlyViewed.map((product) => (
                 <div
