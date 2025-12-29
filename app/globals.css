@@ -59,3 +59,13 @@ body {
 }
 
 
+
+::-webkit-scrollbar {
+  width: 8px;
+  background-color: var(--color-teal-100);
+}
+
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-teal-600);
+  border-radius: 4px;
+}

@@ -39,7 +39,9 @@ export default function CartPanel({ isOpen }: CartPanelProps) {
               <button className="w-full py-2 rounded-xl bg-red-400 text-black hover:bg-red-500 transition">
                 Delete All
               </button>
-              <button className="w-full py-2 rounded-xl bg-teal-200 text-black hover:bg-teal-300 transition">
+              <button
+                onClick={() => window.location.href = '/checkout'}
+                className="w-full py-2 rounded-xl bg-teal-200 text-black hover:bg-teal-300 transition">
                 Checkout
               </button>
             </div>

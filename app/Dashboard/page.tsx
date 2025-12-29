@@ -1,57 +1,76 @@
-"use client";
-import Sidebar from "../components/Sidebar";
-import TopBar from "../components/TopBar";
-import DashboardCard from "../components/DashboardCard";
-import { Package, Heart, User } from "lucide-react";
+import Header from "../components/Header"; // opsional
+import Footer from "../components/Footer"; // opsional
 
-export default function DashboardPage() {
+// Dummy data user, nanti bisa diganti dengan props atau API
+interface Order {
+  id: string;
+  date: string;
+  total: number;
+}
+
+const user = {
+  name: "Hizqil Alfi",
+  country: "Indonesia",
+  orders: [] as Order[],
+  addressCount: 1,
+};
+
+export default function AccountDashboard() {
   return (
-    <div className="flex bg-gray-50 min-h-screen">
-      <Sidebar />
-      <main className="flex-1 p-8">
-        <TopBar />
+    <div className="relative">
+      <Header />
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <DashboardCard title="Orders" value={12} icon={<Package />} bgColor="bg-teal-200" />
-          <DashboardCard title="Wishlist" value={5} icon={<Heart />} bgColor="bg-teal-300" />
-          <DashboardCard title="Profile Completeness" value="80%" icon={<User />} bgColor="bg-teal-400" />
+      <main className="min-h-125 relative z-10 bg-teal-100 rounded-b-4xl px-6 py-12 flex flex-col md:flex-row gap-8 mt-20">
+        {/* Main content: Order History */}
+        <div className="flex-1 ml-25">
+          <h1 className="text-7xl font-bold mb-6">My account</h1>
+
+          <section>
+            <h2 className="text-3xl font-semibold mb-2">Order history</h2>
+            {user.orders.length === 0 ? (
+              <p className="text-gray-500">You haven't placed any orders yet.</p>
+            ) : (
+              <ul className="space-y-4">
+                {user.orders.map((order) => (
+                  <li key={order.id} className="bg-white p-4 rounded shadow">
+                    {/* order details */}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </section>
         </div>
 
-        {/* Main content */}
-        <div className="bg-white rounded-3xl shadow-2xl p-6">
-          <h3 className="text-xl font-semibold mb-4">Recent Orders</h3>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left">
-              <thead>
-                <tr className="border-b border-gray-300">
-                  <th className="py-2 px-4">Order #</th>
-                  <th className="py-2 px-4">Product</th>
-                  <th className="py-2 px-4">Status</th>
-                  <th className="py-2 px-4">Date</th>
-                  <th className="py-2 px-4">Total</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="border-b border-gray-200">
-                  <td className="py-2 px-4">#001</td>
-                  <td className="py-2 px-4">Custom Keycap Set</td>
-                  <td className="py-2 px-4 text-green-600 font-medium">Shipped</td>
-                  <td className="py-2 px-4">2025-12-01</td>
-                  <td className="py-2 px-4">$45</td>
-                </tr>
-                <tr className="border-b border-gray-200">
-                  <td className="py-2 px-4">#002</td>
-                  <td className="py-2 px-4">Mechanical Switches</td>
-                  <td className="py-2 px-4 text-yellow-600 font-medium">Processing</td>
-                  <td className="py-2 px-4">2025-12-10</td>
-                  <td className="py-2 px-4">$30</td>
-                </tr>
-              </tbody>
-            </table>
+        {/* Sidebar: Account Details */}
+        <aside className="w-full md:w-96 bg-[#fffffffb] p-6 rounded-4xl mr-25">
+          <div className="flex justify-between items-start mb-6">
+            <h2 className="text-2xl">Account details</h2>
+            <button className="text-lg font-semibold text-black bg-red-300 px-3 py-1 rounded-full hover:bg-red-400 transition">
+              Log out
+            </button>
           </div>
-        </div>
+
+          <div className="space-y-6 mt-18">
+            <div>
+              <p className="text-black text-sm font-light">Name</p>
+              <p className="font-medium text-lg">{user.name}</p>
+            </div>
+            <div>
+              <p className="text-black text-sm font-light">Country</p>
+              <p className="font-medium text-xl">{user.country}</p>
+            </div>
+          </div>
+
+          <button className="mt-15 w-full bg-black text-white py-2 px-4 rounded-full hover:bg-gray-800">
+            View addresses ({user.addressCount})
+          </button>
+        </aside>
+
+        {/* Spacer untuk footer reveal */}
+        <div className="h-17.5" />
       </main>
+
+      <Footer />
     </div>
   );
 }
