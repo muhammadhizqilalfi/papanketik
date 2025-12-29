@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useSession, signOut } from "next-auth/react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { supabase } from "@/lib/Client";
 
 interface Order {
   id: string;
@@ -14,108 +14,51 @@ interface Order {
 
 export default function AccountDashboard() {
   const router = useRouter();
+  const { data: session, status } = useSession();
 
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
-  const [orders, setOrders] = useState<Order[]>([]);
+  const [orders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
-
-  const [editingCountry, setEditingCountry] = useState(false);
-  const [country, setCountry] = useState("");
 
   const [editingName, setEditingName] = useState(false);
   const [editingEmail, setEditingEmail] = useState(false);
+  const [editingCountry, setEditingCountry] = useState(false);
 
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
+  const [country, setCountry] = useState("");
 
-  // Ambil user + profile
+  const COUNTRIES = [
+  "Indonesia",
+  "United States",
+  "United Kingdom",
+  "Germany",
+  "France",
+  "Japan",
+  "China",
+  "Australia",
+];
+
+
   useEffect(() => {
-    const load = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-
-      if (!user) {
-        setLoading(false);
-        router.push("/");
-        return;
-      }
-
-      setUser(user);
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("*")
-        .eq("id", user.id)
-        .single();
-
-      setFullName(profileData?.full_name || "");
-      setEmail(user.email || "");
-      setProfile(profileData);
-      setCountry(profileData?.country || "");
-      setLoading(false);
-    };
-
-    load();
-  }, [router]);
-
-  // Logout
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
-  };
-
-  // Simpan country
-  const saveCountry = async () => {
-    if (!user) return;
-
-    await supabase.from("profiles").update({ country }).eq("id", user.id);
-
-    setProfile((prev: any) => ({ ...prev, country }));
-    setEditingCountry(false);
-  };
-
-  const saveName = async () => {
-    if (!user) return;
-
-    await supabase
-      .from("profiles")
-      .update({ full_name: fullName })
-      .eq("id", user.id);
-
-    setProfile((prev: any) => ({ ...prev, full_name: fullName }));
-    setEditingName(false);
-  };
-
-  const saveEmail = async () => {
-    if (!user) return;
-
-    const { error } = await supabase.auth.updateUser({
-      email,
-    });
-
-    if (error) {
-      alert(error.message);
+    if (status === "unauthenticated") {
+      router.replace("/");
       return;
     }
 
-    alert("Verification email sent to your new email address");
-    setEditingEmail(false);
-  };
+    if (status === "authenticated") {
+      setFullName(session.user?.name || "");
+      setEmail(session.user?.email || "");
+      setCountry("Indonesia");
+      setLoading(false);
+    }
+  }, [status, session, router]);
 
-  // Loading UI
-  if (loading) {
+  if (status === "loading" || loading) {
     return (
       <div className="h-screen flex items-center justify-center">
         <p>Loading account...</p>
       </div>
     );
-  }
-
-  // Safety fallback
-  if (!user || !profile) {
-    return null;
   }
 
   return (
@@ -150,7 +93,7 @@ export default function AccountDashboard() {
           <div className="flex justify-between items-start mb-6">
             <h2 className="text-2xl">Account details</h2>
             <button
-              onClick={handleLogout}
+              onClick={() => signOut({ callbackUrl: "/" })}
               className="text-lg font-semibold bg-red-300 px-3 py-1 rounded-full hover:bg-red-500 transition"
             >
               Log out
@@ -158,14 +101,14 @@ export default function AccountDashboard() {
           </div>
 
           <div className="space-y-6 mt-18">
+            {/* NAME */}
             <div>
               <p className="text-black text-sm font-light">Name</p>
-
               {editingName ? (
                 <input
                   value={fullName}
                   onChange={(e) => setFullName(e.target.value)}
-                  onBlur={saveName}
+                  onBlur={() => setEditingName(false)}
                   autoFocus
                   className="w-full px-3 py-2 rounded-full bg-white outline-none"
                 />
@@ -174,19 +117,19 @@ export default function AccountDashboard() {
                   onClick={() => setEditingName(true)}
                   className="font-medium text-lg cursor-pointer"
                 >
-                  {profile.full_name || "Click to set name"}
+                  {fullName || "Click to set name"}
                 </p>
               )}
             </div>
 
+            {/* EMAIL */}
             <div>
               <p className="text-black text-sm font-light">Email</p>
-
               {editingEmail ? (
                 <input
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  onBlur={saveEmail}
+                  onBlur={() => setEditingEmail(false)}
                   autoFocus
                   className="w-full px-3 py-2 rounded-full bg-white outline-none"
                 />
@@ -195,27 +138,36 @@ export default function AccountDashboard() {
                   onClick={() => setEditingEmail(true)}
                   className="font-medium text-lg cursor-pointer"
                 >
-                  {user.email}
+                  {email}
                 </p>
               )}
             </div>
 
+            {/* COUNTRY */}
             <div>
               <p className="text-sm">Country</p>
               {editingCountry ? (
-                <input
+                <select
                   value={country}
-                  onChange={(e) => setCountry(e.target.value)}
-                  onBlur={saveCountry}
+                  onChange={(e) => {
+                    setCountry(e.target.value);
+                    setEditingCountry(false);
+                  }}
                   autoFocus
-                  className="w-full px-3 py-2 rounded-full bg-white outline-none"
-                />
+                  className="w-full px-3 py-2 rounded-full bg-white outline-none cursor-pointer"
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c} value={c}>
+                      {c}
+                    </option>
+                  ))}
+                </select>
               ) : (
                 <p
                   onClick={() => setEditingCountry(true)}
                   className="text-xl cursor-pointer"
                 >
-                  {profile.country || "Click to set country"}
+                  {country || "Click to set country"}
                 </p>
               )}
             </div>

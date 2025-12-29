@@ -1,17 +1,18 @@
 "use client";
+
 import { useEffect, useState } from "react";
 import { ChevronDown, Search, User, ShoppingCart, X } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { AnimatePresence, motion } from "framer-motion";
-import { supabase } from "@/lib/Client";
+import { useSession } from "next-auth/react";
 
 import AuthPanel from "./AuthPanel";
 import SearchPanel from "./SearchPanel";
 import ShopPanel from "./ShopPanel";
 import CartPanel from "./CartPanel";
 
-type AuthState = "login" | "signup" | "reset" | null;
+type AuthState = "login" | "signup" | "reset" | "change-email" | null;
 
 export default function Header({
   onSearch,
@@ -24,8 +25,8 @@ export default function Header({
     "Type your style, your way.",
   ];
 
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const { data: session } = useSession();
+  const user = session?.user;
 
   const [index, setIndex] = useState(0);
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -36,10 +37,8 @@ export default function Header({
   const [searchQuery, setSearchQuery] = useState("");
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
 
-  const isAnyPanelOpen =
-    isSearchOpen || isShopOpen || isCartOpen || isAuthOpen;
+  const isAnyPanelOpen = isSearchOpen || isShopOpen || isCartOpen || isAuthOpen;
 
-  /* ===== MESSAGE ROTATION ===== */
   useEffect(() => {
     const interval = setInterval(
       () => setIndex((prev) => (prev + 1) % messages.length),
@@ -48,56 +47,22 @@ export default function Header({
     return () => clearInterval(interval);
   }, []);
 
-  /* ===== FOLLOW CURSOR ===== */
   useEffect(() => {
     if (!isAnyPanelOpen) return;
-
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: MouseEvent) =>
       setMousePos({ x: e.clientX, y: e.clientY });
-    };
-
     window.addEventListener("mousemove", handleMouseMove);
     return () => window.removeEventListener("mousemove", handleMouseMove);
   }, [isAnyPanelOpen]);
 
-  /* ===== AUTH + PROFILE ===== */
-  useEffect(() => {
-    const loadUser = async () => {
-      const { data } = await supabase.auth.getUser();
-      setUser(data.user);
-
-      if (data.user) {
-        const { data: profileData } = await supabase
-          .from("profiles")
-          .select("*")
-          .single();
-
-        setProfile(profileData);
-      } else {
-        setProfile(null);
-      }
-    };
-
-    loadUser();
-
-    const { data: listener } = supabase.auth.onAuthStateChange(() => {
-      loadUser();
-    });
-
-    return () => {
-      listener.subscription.unsubscribe();
-    };
-  }, []);
-
-  /* ===== INITIALS ===== */
-  const getInitials = (name?: string) => {
-    if (!name) return "";
-    return name
-      .split(" ")
-      .map((n) => n[0])
-      .join("")
-      .toUpperCase();
-  };
+  const getInitials = (name?: string | null) =>
+    name
+      ? name
+          .split(" ")
+          .map((n) => n[0])
+          .join("")
+          .toUpperCase()
+      : "";
 
   const closeAll = () => {
     setIsSearchOpen(false);
@@ -113,47 +78,26 @@ export default function Header({
     setIsAuthOpen(panel === "auth" ? (isAuthOpen ? null : "login") : null);
   };
 
-  const menus = {
-    brands: [
-      { label: "Qwertykeys", href: "/brands/qwertykeys" },
-      { label: "KBDfans", href: "/brands/kbdfans" },
-      { label: "MONOKEI", href: "/brands/monokei" },
-      { label: "Neo", href: "/brands/neo" },
-      { label: "Wuque Studio", href: "/brands/wuque" },
-    ],
-    layout: [
-      { label: "60% and less", href: "/layout/60" },
-      { label: "65%", href: "/layout/65" },
-      { label: "70% and 75%", href: "/layout/75" },
-      { label: "80% TKL", href: "/layout/tkl" },
-      { label: "Full Size", href: "/layout/full" },
-    ],
-    category: [
-      { label: "Pre-built Keyboard", href: "/category/prebuilt" },
-      { label: "Hall Effect Keyboard", href: "/category/hall-effect" },
-      { label: "Ergonomic Keyboard", href: "/category/ergonomic" },
-      { label: "Keycaps", href: "/category/keycaps" },
-      { label: "Switches", href: "/category/switches" },
-    ],
-    shop: [{ label: "All Products", href: "/cataloguekey/" }],
-  };
-
   return (
     <header className="w-full relative z-50">
-      {/* TOP HEADER */}
       <div className="bg-teal-700 text-white text-center text-sm h-20 overflow-hidden relative">
-        <div key={index} className="animate-bounce absolute w-full top-3 left-0">
+        <div
+          key={index}
+          className="animate-bounce absolute w-full top-3 left-0"
+        >
           {messages[index]}
         </div>
       </div>
 
-      {/* NAVBAR */}
       <nav className="absolute top-10 left-0 right-0 z-50 bg-teal-100 px-6 py-3 flex items-center justify-between rounded-t-4xl">
         <Image src="/images/logo2.png" alt="Logo" width={100} height={50} />
 
         <ul className="flex items-center gap-6 font-medium">
           <li>
-            <Link href="/" className="relative px-6 py-2 hover:text-white group">
+            <Link
+              href="/"
+              className="relative px-6 py-2 hover:text-white group"
+            >
               <span className="absolute inset-0 bg-black rounded-full -z-10 opacity-0 group-hover:opacity-100 transition" />
               Home
             </Link>
@@ -168,7 +112,10 @@ export default function Header({
             </button>
           </li>
           <li>
-            <Link href="/support" className="relative px-6 py-2 hover:text-white group">
+            <Link
+              href="/support"
+              className="relative px-6 py-2 hover:text-white group"
+            >
               <span className="absolute inset-0 bg-black rounded-full -z-10 opacity-0 group-hover:opacity-100 transition" />
               Support
             </Link>
@@ -176,21 +123,38 @@ export default function Header({
         </ul>
 
         <div className="flex items-center text-black">
-          <button onClick={() => closeAllExcept("search")} className="p-3 rounded-full hover:bg-black hover:text-white transition">
+          <button
+            onClick={() => closeAllExcept("search")}
+            className="p-3 rounded-full hover:bg-black hover:text-white transition"
+          >
             <Search size={20} />
           </button>
 
-          <button onClick={() => closeAllExcept("auth")} className="p-2 rounded-full hover:bg-black hover:text-white transition">
-            {profile ? (
+          <button
+            onClick={() => {
+              if (user) {
+                closeAll();
+                window.location.href = "/Dashboard";
+                // atau: router.push("/Dashboard") kalau mau
+              } else {
+                closeAllExcept("auth");
+              }
+            }}
+            className="p-2 rounded-full hover:bg-black hover:text-white transition"
+          >
+            {user ? (
               <div className="w-8 h-8 rounded-full bg-black text-white flex items-center justify-center text-sm font-bold">
-                {getInitials(profile.full_name)}
+                {getInitials(user.name)}
               </div>
             ) : (
               <User size={20} />
             )}
           </button>
 
-          <button onClick={() => closeAllExcept("cart")} className="p-3 rounded-full hover:bg-black hover:text-white transition">
+          <button
+            onClick={() => closeAllExcept("cart")}
+            className="p-3 rounded-full hover:bg-black hover:text-white transition"
+          >
             <ShoppingCart size={20} />
           </button>
         </div>
@@ -213,7 +177,6 @@ export default function Header({
               initial={{ scale: 0, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0, opacity: 0 }}
-              transition={{ type: "spring", stiffness: 300, damping: 20 }}
               style={{ left: mousePos.x - 20, top: mousePos.y - 20 }}
               onClick={closeAll}
               className="fixed z-50 w-10 h-10 rounded-full bg-white text-black flex items-center justify-center shadow-xl"
@@ -224,10 +187,18 @@ export default function Header({
         )}
       </AnimatePresence>
 
-      <SearchPanel isOpen={isSearchOpen} searchQuery={searchQuery} setSearchQuery={setSearchQuery} onSearch={onSearch} />
-      <ShopPanel isOpen={isShopOpen} menus={menus} />
+      <SearchPanel
+        isOpen={isSearchOpen}
+        searchQuery={searchQuery}
+        setSearchQuery={setSearchQuery}
+        onSearch={onSearch}
+      />
+      <ShopPanel isOpen={isShopOpen} menus={{}} />
       <CartPanel isOpen={isCartOpen} />
-      <AuthPanel isOpen={isAuthOpen} setIsOpen={setIsAuthOpen} />
+      <AuthPanel
+        isOpen={isAuthOpen}
+        setIsOpen={(state) => setIsAuthOpen(state)}
+      />
     </header>
   );
 }
