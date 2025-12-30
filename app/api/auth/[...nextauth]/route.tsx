@@ -23,23 +23,19 @@ const handler = NextAuth({
           email: credentials.email,
         });
 
-        if (!user) {
-          throw new Error("User not found");
-        }
+        if (!user) throw new Error("User not found");
 
         const isValid = await bcrypt.compare(
           credentials.password,
           user.password
         );
-
-        if (!isValid) {
-          throw new Error("Invalid password");
-        }
+        if (!isValid) throw new Error("Invalid password");
 
         return {
           id: user._id.toString(),
           email: user.email,
           name: user.name,
+          role: user.role || "user", // default role = user
         };
       },
     }),
@@ -47,6 +43,19 @@ const handler = NextAuth({
 
   session: {
     strategy: "jwt",
+  },
+
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.role = (user as any).role; // cast supaya TypeScript tidak error
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      session.user.role = token.role as "user" | "admin"; // casting ke tipe yang sesuai
+      return session;
+    },
   },
 
   secret: process.env.NEXTAUTH_SECRET,

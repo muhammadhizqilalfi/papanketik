@@ -10,7 +10,7 @@ export default function Home() {
     <div className="relative">
       <Header />
 
-      <main className="relative z-10 bg-teal-600 rounded-b-4xl">
+      <main className="relative z-10 bg-teal-50 rounded-b-4xl">
         <ProductShowcase />
         <Text />
 

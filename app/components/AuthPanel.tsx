@@ -21,24 +21,31 @@ export default function AuthPanel({ isOpen, setIsOpen }: AuthPanelProps) {
   const [error, setError] = useState<string | null>(null);
 
   // ===== LOGIN =====
-  const handleLogin = async () => {
-    if (!email || !password) return setError("Email and password required");
+const handleLogin = async () => {
+  if (!email || !password) return setError("Email and password required");
 
-    setLoading(true);
-    setError(null);
+  setLoading(true);
+  setError(null);
 
-    const res = await signIn("credentials", { email, password, redirect: false });
+  const res = await signIn("credentials", { email, password, redirect: false });
+  setLoading(false);
 
-    setLoading(false);
+  if (res?.error) {
+    setError("Invalid email or password");
+    return;
+  }
 
-    if (res?.error) {
-      setError("Invalid email or password");
-      return;
-    }
+  // ambil session untuk cek role
+  const sessionRes = await fetch("/api/auth/session");
+  const sessionData = await sessionRes.json();
 
-    setIsOpen(null);
-    router.replace("/Dashboard");
-  };
+  const role = sessionData?.user?.role || "user";
+
+  setIsOpen(null);
+  if (role === "admin") router.replace("/admin/dashboard");
+  else router.replace("/Dashboard");
+};
+
 
   // ===== SIGNUP =====
   const handleSignup = async () => {

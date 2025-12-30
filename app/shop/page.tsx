@@ -3,31 +3,38 @@
 import { useState, useEffect } from "react";
 import Image from "next/image";
 import { Home } from "lucide-react";
+import { useRouter } from "next/navigation";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import ModalProductDetail from "../components/ProductDetail";
 
 export default function Page() {
+  const router = useRouter();
+  const [products, setProducts] = useState<any[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
-  const [selectedProduct, setSelectedProduct] = useState<any>(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
 
-  const products = [
-    { id: 1, name: "KBDFans Tofu60 Rev2.0", price: "Rp 350.000", image: "/images/product1.webp" },
-    { id: 2, name: "QK MKII", price: "Rp 420.000", image: "/images/product2.webp" },
-    { id: 3, name: "Wuque Studio Freya", price: "Rp 250.000", image: "/images/product3.jpg" },
-    { id: 4, name: "Epomaker RT100", price: "Rp 599.000", image: "/images/product4.webp" },
-    { id: 5, name: "Tiger Lite Gaming", price: "Rp 150.000", image: "/images/product5.jpg" },
-    { id: 6, name: "Corgi Fairlady Alice", price: "Rp 720.000", image: "/images/product6.jpg" },
-    { id: 7, name: "Agar mini", price: "Rp 310.000", image: "/images/product7.jpg" },
-    { id: 8, name: "Agar Standart", price: "Rp 280.000", image: "/images/product8.jpg" },
-    { id: 9, name: "Onibi", price: "Rp 280.000", image: "/images/product9.jpg" },
-  ];
+  // Fetch produk dari database
+  useEffect(() => {
+    fetch("/api/products")
+      .then((res) => res.json())
+      .then((data) => setProducts(data.products || []))
+      .catch(console.error);
+  }, []);
 
-  const parsePrice = (price: string) => parseInt(price.replace(/[^\d]/g, ""), 10);
+  // Ambil Recently Viewed dari localStorage
+  useEffect(() => {
+    const stored = localStorage.getItem("recentlyViewed");
+    if (stored) setRecentlyViewed(JSON.parse(stored));
+  }, []);
+
+  const clearRecentlyViewed = () => {
+    localStorage.removeItem("recentlyViewed");
+    setRecentlyViewed([]);
+  };
+
+  const parsePrice = (price: number) => price;
 
   const filteredProducts = products.filter((p) =>
     p.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -46,17 +53,24 @@ export default function Page() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
 
-  // Ambil Recently Viewed dari localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem("recentlyViewed");
-    if (stored) {
-      setRecentlyViewed(JSON.parse(stored));
-    }
-  }, [isModalOpen]); // refresh setiap modal ditutup
+  const getMainImage = (product: any) => {
+    if (!product) return "/placeholder.png";
+    if (Array.isArray(product.image)) return product.image[0] || "/placeholder.png";
+    try {
+      const parsed = JSON.parse(product.image);
+      if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
+    } catch {}
+    return product.image || "/placeholder.png";
+  };
 
-  const clearRecentlyViewed = () => {
-    localStorage.removeItem("recentlyViewed");
-    setRecentlyViewed([]);
+  const handleClickProduct = (product: any) => {
+    // Tambahkan ke recently viewed
+    const updated = [product, ...recentlyViewed.filter((p) => p._id !== product._id)];
+    setRecentlyViewed(updated.slice(0, 10));
+    localStorage.setItem("recentlyViewed", JSON.stringify(updated.slice(0, 10)));
+
+    // Navigate ke halaman produk full-page
+    router.push(`/shop/${product._id}`);
   };
 
   return (
@@ -88,24 +102,22 @@ export default function Page() {
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6 mb-8">
           {paginatedProducts.map((product) => (
             <div
-              key={product.id}
+              key={product._id}
               className="bg-white rounded-xl shadow hover:shadow-lg overflow-hidden transition cursor-pointer"
-              onClick={() => {
-                setSelectedProduct(product);
-                setIsModalOpen(true);
-              }}
+              onClick={() => handleClickProduct(product)}
             >
               <div className="relative w-full h-80">
                 <Image
-                  src={product.image}
+                  src={getMainImage(product)}
                   alt={product.name}
                   fill
                   className="object-cover"
+                  unoptimized
                 />
               </div>
               <div className="p-6 border-t bg-white flex justify-between items-center">
-                <h2 className="text-lg font-semibold">{product.name}</h2>
-                <p className="text-teal-700 font-bold">{product.price}</p>
+                <h2 className="text-2xl font-semibold">{product.name}</h2>
+                <p className="text-teal-700 font-medium text-xl">Rp {product.price}</p>
               </div>
             </div>
           ))}
@@ -141,28 +153,28 @@ export default function Page() {
                 Clear
               </button>
             </div>
-            <div className="mb-8"/>
+            <div className="mb-8" />
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-6">
               {recentlyViewed.map((product) => (
                 <div
-                  key={product.id}
-                  className="bg-white rounded-xl shadow overflow-hidden cursor-pointer"
-                  onClick={() => {
-                    setSelectedProduct(product);
-                    setIsModalOpen(true);
-                  }}
+                  key={product._id || product.id}
+                  className="bg-white rounded-xl shadow overflow-hidden cursor-pointer hover:shadow"
+                  onClick={() => handleClickProduct(product)}
                 >
-                  <div className="relative w-full h-48">
+                  <div className="relative w-full h-80">
                     <Image
-                      src={product.image}
+                      src={getMainImage(product)}
                       alt={product.name}
                       fill
                       className="object-cover"
+                      unoptimized
                     />
                   </div>
-                  <div className="p-4 flex justify-between items-center">
-                    <h3 className="text-sm font-semibold">{product.name}</h3>
-                    <p className="text-teal-600 font-bold">{product.price}</p>
+                  <div className="p-6 flex justify-between items-center">
+                    <h3 className="text-2xl font-semibold">{product.name}</h3>
+                    <p className="text-teal-600 font-medium text-xl">
+                      Rp {product.price}
+                    </p>
                   </div>
                 </div>
               ))}
@@ -170,13 +182,6 @@ export default function Page() {
           </div>
         )}
       </div>
-
-      {/* Modal Product */}
-      <ModalProductDetail
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        product={selectedProduct}
-      />
 
       <Footer />
     </div>
