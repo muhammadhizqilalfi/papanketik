@@ -28,16 +28,15 @@ export default function AccountDashboard() {
   const [country, setCountry] = useState("");
 
   const COUNTRIES = [
-  "Indonesia",
-  "United States",
-  "United Kingdom",
-  "Germany",
-  "France",
-  "Japan",
-  "China",
-  "Australia",
-];
-
+    "Indonesia",
+    "United States",
+    "United Kingdom",
+    "Germany",
+    "France",
+    "Japan",
+    "China",
+    "Australia",
+  ];
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -45,9 +44,15 @@ export default function AccountDashboard() {
       return;
     }
 
-    if (status === "authenticated") {
-      setFullName(session.user?.name || "");
-      setEmail(session.user?.email || "");
+    if (status === "authenticated" && session?.user) {
+      const role = session.user.role || "user"; // pastikan session.user.role tersedia
+      if (role === "admin") {
+        router.replace("/admin/dashboard"); // admin diarahkan ke admin dashboard
+        return;
+      }
+
+      setFullName(session.user.name || "");
+      setEmail(session.user.email || "");
       setCountry("Indonesia");
       setLoading(false);
     }
@@ -73,9 +78,7 @@ export default function AccountDashboard() {
           <section>
             <h2 className="text-3xl font-semibold mb-2">Order history</h2>
             {orders.length === 0 ? (
-              <p className="text-gray-500">
-                You haven't placed any orders yet.
-              </p>
+              <p className="text-gray-500">You haven't placed any orders yet.</p>
             ) : (
               <ul className="space-y-4">
                 {orders.map((order) => (
