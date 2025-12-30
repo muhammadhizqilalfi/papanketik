@@ -78,7 +78,7 @@ export default function AccountDashboard() {
           <section>
             <h2 className="text-3xl font-semibold mb-2">Order history</h2>
             {orders.length === 0 ? (
-              <p className="text-gray-500">You haven't placed any orders yet.</p>
+              <p className="text-gray-500">You haven&apos;t placed any orders yet.</p>
             ) : (
               <ul className="space-y-4">
                 {orders.map((order) => (
