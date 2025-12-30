@@ -7,13 +7,22 @@ import { useRouter } from "next/navigation";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
+// Definisikan tipe untuk produk
+interface Product {
+  _id: string;
+  id?: string;
+  name: string;
+  price: number;
+  image: string | string[];
+}
+
 export default function Page() {
   const router = useRouter();
-  const [products, setProducts] = useState<any[]>([]);
+  const [products, setProducts] = useState<Product[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [sortOption, setSortOption] = useState("default");
   const [searchQuery, setSearchQuery] = useState("");
-  const [recentlyViewed, setRecentlyViewed] = useState<any[]>([]);
+  const [recentlyViewed, setRecentlyViewed] = useState<Product[]>([]);
 
   // Fetch produk dari database
   useEffect(() => {
@@ -53,17 +62,19 @@ export default function Page() {
   const startIndex = (currentPage - 1) * itemsPerPage;
   const paginatedProducts = sortedProducts.slice(startIndex, startIndex + itemsPerPage);
 
-  const getMainImage = (product: any) => {
+  const getMainImage = (product: Product) => {
     if (!product) return "/placeholder.png";
     if (Array.isArray(product.image)) return product.image[0] || "/placeholder.png";
     try {
       const parsed = JSON.parse(product.image);
       if (Array.isArray(parsed) && parsed.length > 0) return parsed[0];
-    } catch {}
-    return product.image || "/placeholder.png";
+    } catch (err) {
+      console.error("Failed to parse product image:", err);
+    }
+    return typeof product.image === "string" ? product.image : "/placeholder.png";
   };
 
-  const handleClickProduct = (product: any) => {
+  const handleClickProduct = (product: Product) => {
     // Tambahkan ke recently viewed
     const updated = [product, ...recentlyViewed.filter((p) => p._id !== product._id)];
     setRecentlyViewed(updated.slice(0, 10));

@@ -7,7 +7,9 @@ import { signIn } from "next-auth/react";
 
 interface AuthPanelProps {
   isOpen: "login" | "signup" | "reset" | "change-email" | null;
-  setIsOpen: (state: "login" | "signup" | "reset" | "change-email" | null) => void;
+  setIsOpen: (
+    state: "login" | "signup" | "reset" | "change-email" | null
+  ) => void;
 }
 
 export default function AuthPanel({ isOpen, setIsOpen }: AuthPanelProps) {
@@ -21,35 +23,39 @@ export default function AuthPanel({ isOpen, setIsOpen }: AuthPanelProps) {
   const [error, setError] = useState<string | null>(null);
 
   // ===== LOGIN =====
-const handleLogin = async () => {
-  if (!email || !password) return setError("Email and password required");
+  const handleLogin = async () => {
+    if (!email || !password) return setError("Email and password required");
 
-  setLoading(true);
-  setError(null);
+    setLoading(true);
+    setError(null);
 
-  const res = await signIn("credentials", { email, password, redirect: false });
-  setLoading(false);
+    const res = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
+    setLoading(false);
 
-  if (res?.error) {
-    setError("Invalid email or password");
-    return;
-  }
+    if (res?.error) {
+      setError("Invalid email or password");
+      return;
+    }
 
-  // ambil session untuk cek role
-  const sessionRes = await fetch("/api/auth/session");
-  const sessionData = await sessionRes.json();
+    // ambil session untuk cek role
+    const sessionRes = await fetch("/api/auth/session");
+    const sessionData = await sessionRes.json();
 
-  const role = sessionData?.user?.role || "user";
+    const role = sessionData?.user?.role || "user";
 
-  setIsOpen(null);
-  if (role === "admin") router.replace("/admin/dashboard");
-  else router.replace("/Dashboard");
-};
-
+    setIsOpen(null);
+    if (role === "admin") router.replace("/admin/dashboard");
+    else router.replace("/Dashboard");
+  };
 
   // ===== SIGNUP =====
   const handleSignup = async () => {
-    if (!email || !password || !fullName) return setError("Please fill all fields");
+    if (!email || !password || !fullName)
+      return setError("Please fill all fields");
 
     setLoading(true);
     setError(null);
@@ -60,8 +66,12 @@ const handleLogin = async () => {
       body: JSON.stringify({ email, password, fullName }),
     });
 
-    let data: any = null;
-    try { data = await res.json(); } catch {}
+    let data: { error?: string } | null = null;
+    try {
+      data = await res.json();
+    } catch (err) {
+      console.error("Failed to parse signup response:", err);
+    }
 
     if (!res.ok) {
       setLoading(false);
@@ -70,7 +80,11 @@ const handleLogin = async () => {
     }
 
     // auto login
-    const loginRes = await signIn("credentials", { email, password, redirect: false });
+    const loginRes = await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    });
 
     setLoading(false);
 
